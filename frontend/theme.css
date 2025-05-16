@@ -1,0 +1,183 @@
+/* theme.css */
+:root {
+    /* --- Light Theme Variables --- */
+    --thought-bubble-bg-light: #FFFFFF;
+    --thought-bubble-text-light: #000000;
+    --thought-bubble-hover-bg-light: #F7F7F7;
+    --typing-indicator-dot-light: #FCB813;
+
+    /* Variables for chat area and input elements in Light Mode */
+    --chat-window-bg-light: #FFFFFF;
+    --chat-window-text-light: #000000; 
+
+    --input-area-bg-light: #FFFFFF;
+    --input-area-border-light: #D1D5DB; /* approx gray-300 for light border */
+
+    --user-input-bg-light: #F7F7F7;
+    --user-input-text-light: #000000;
+    --user-input-border-light: #9CA3AF; /* approx gray-400 for light border */
+    --user-input-placeholder-light: #6B7280; /* approx gray-500 for light placeholder */
+
+    --footer-text-color-light: #000000;
+
+    /* NEW: Variables for Welcome Message Text in Light Mode */
+    --welcome-h2-text-light: #000000; /* Black for h2 */
+    --welcome-p-text-light: #000000;  /* Black for p */
+
+
+    /* --- Dark Theme Variables --- */
+    --thought-bubble-bg-dark: #06529c;
+    --thought-bubble-text-dark: #cbd5e1;
+    --thought-bubble-hover-bg-dark: #1c3d5e;
+    --typing-indicator-dot-dark: #FCB813;
+
+    /* Variables for chat area and input elements in Dark Mode */
+    --chat-window-bg-dark: #222326;
+    --chat-window-text-dark: #e5e7eb; /* approx gray-200 */
+
+    --input-area-bg-dark: #222326;
+    --input-area-border-dark: #374151; /* approx gray-700 */
+
+    --user-input-bg-dark: #222326;
+    --user-input-text-dark: #e5e7eb;   /* approx gray-200 */
+    --user-input-border-dark: #4B5563; /* approx gray-600 */
+    --user-input-placeholder-dark: #6B7280; /* approx gray-500 */
+
+    --footer-text-color-dark: #6B7280; /* approx gray-500 */
+
+    /* NEW: Variables for Welcome Message Text in Dark Mode */
+    --welcome-h2-text-dark: #e5e7eb;  /* Light gray for h2 (consistent with other dark text) */
+    --welcome-p-text-dark: #d1d5db;   /* Slightly different or same light gray for p */
+
+
+    /* --- Default Applied "Active" Variables (Initially Light Theme) --- */
+    --thought-bubble-bg: var(--thought-bubble-bg-light);
+    --thought-bubble-text: var(--thought-bubble-text-light);
+    --thought-bubble-hover-bg: var(--thought-bubble-hover-bg-light);
+    --typing-dot-color: var(--typing-indicator-dot-light);
+
+    /* Active variables for chat area and input elements */
+    --chat-window-bg: var(--chat-window-bg-light);
+    --chat-window-text: var(--chat-window-text-light);
+    --input-area-bg: var(--input-area-bg-light);
+    --input-area-border: var(--input-area-border-light);
+    --user-input-bg: var(--user-input-bg-light);
+    --user-input-text: var(--user-input-text-light);
+    --user-input-border: var(--user-input-border-light);
+    --user-input-placeholder: var(--user-input-placeholder-light);
+    --footer-text-color: var(--footer-text-color-light);
+
+    /* NEW: Active variables for Welcome Message Text */
+    --welcome-h2-text: var(--welcome-h2-text-light);
+    --welcome-p-text: var(--welcome-p-text-light);
+}
+
+html.dark {
+    /* Switch "Active" Variables to Dark Theme Counterparts */
+    --thought-bubble-bg: var(--thought-bubble-bg-dark);
+    --thought-bubble-text: var(--thought-bubble-text-dark);
+    --thought-bubble-hover-bg: var(--thought-bubble-hover-bg-dark);
+    --typing-dot-color: var(--typing-indicator-dot-dark);
+
+    /* Switch chat area and input element variables */
+    --chat-window-bg: var(--chat-window-bg-dark);
+    --chat-window-text: var(--chat-window-text-dark);
+    --input-area-bg: var(--input-area-bg-dark);
+    --input-area-border: var(--input-area-border-dark);
+    --user-input-bg: var(--user-input-bg-dark);
+    --user-input-text: var(--user-input-text-dark);
+    --user-input-border: var(--user-input-border-dark);
+    --user-input-placeholder: var(--user-input-placeholder-dark);
+    --footer-text-color: var(--footer-text-color-dark);
+
+    /* NEW: Switch Welcome Message Text variables */
+    --welcome-h2-text: var(--welcome-h2-text-dark);
+    --welcome-p-text: var(--welcome-p-text-dark);
+}
+
+/* --- General Styles --- */
+.chat-container { 
+    height: calc(90vh - 130px);
+    background-color: var(--chat-window-bg);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.message-animation {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.typing-indicator span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--typing-dot-color);
+    margin: 0 2px;
+    transition: background-color 0.3s ease;
+}
+
+.typing-indicator span:nth-child(1) { animation: bounce 1s infinite; }
+.typing-indicator span:nth-child(2) { animation: bounce 1s infinite 0.2s; }
+.typing-indicator span:nth-child(3) { animation: bounce 1s infinite 0.4s; }
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.thought-bubble {
+    font-size: 0.8rem;
+    background-color: var(--thought-bubble-bg);
+    color: var(--thought-bubble-text);
+    padding: 6px 8px;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    cursor: pointer;
+    line-height: 1.3;
+}
+
+.thought-bubble:hover {
+    background-color: var(--thought-bubble-hover-bg);
+}
+
+.input-area-container-themed {
+    background-color: var(--input-area-bg);
+    border-top-width: 1px; 
+    border-color: var(--input-area-border);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.user-input-themed {
+    background-color: var(--user-input-bg);
+    color: var(--user-input-text);
+    border-width: 1px; 
+    border-style: solid; 
+    border-color: var(--user-input-border);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.user-input-themed::placeholder {
+    color: var(--user-input-placeholder);
+    opacity: 1; 
+}
+
+.footer-text-themed {
+    color: var(--footer-text-color);
+    transition: color 0.3s ease;
+}
+
+/* NEW: Classes for Welcome Message Text */
+.welcome-h2-themed {
+    color: var(--welcome-h2-text);
+    transition: color 0.3s ease;
+}
+
+.welcome-p-themed {
+    color: var(--welcome-p-text);
+    transition: color 0.3s ease;
+}
