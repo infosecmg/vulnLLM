@@ -7,13 +7,13 @@
     --typing-indicator-dot-light: #FCB813;
 
     /* Variables for chat area and input elements in Light Mode */
-    --chat-window-bg-light: #FFFFFF;
+    --chat-window-bg-light: #F7F7FF;
     --chat-window-text-light: #000000; 
 
     --input-area-bg-light: #FFFFFF;
     --input-area-border-light: #D1D5DB; /* approx gray-300 for light border */
 
-    --user-input-bg-light: #F7F7F7;
+    --user-input-bg-light: #f7f7ff;
     --user-input-text-light: #000000;
     --user-input-border-light: #9CA3AF; /* approx gray-400 for light border */
     --user-input-placeholder-light: #6B7280; /* approx gray-500 for light placeholder */
@@ -26,13 +26,13 @@
 
 
     /* --- Dark Theme Variables --- */
-    --thought-bubble-bg-dark: #06529c;
+    --thought-bubble-bg-dark: #222326;
     --thought-bubble-text-dark: #cbd5e1;
     --thought-bubble-hover-bg-dark: #1c3d5e;
     --typing-indicator-dot-dark: #FCB813;
 
     /* Variables for chat area and input elements in Dark Mode */
-    --chat-window-bg-dark: #222326;
+    --chat-window-bg-dark: #000000;
     --chat-window-text-dark: #e5e7eb; /* approx gray-200 */
 
     --input-area-bg-dark: #222326;
