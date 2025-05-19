@@ -1,17 +1,17 @@
-Deploying TinyLlama with FastAPI on Cloud Run (Private) & Connecting via API Gateway
+# Deploying TinyLlama with FastAPI on Cloud Run (Private) & Connecting via API Gateway
 This guide details the steps to deploy a custom TinyLlama FastAPI application as a private service on Google Cloud Run (CPU-based) and securely expose it to a remote front-end (e.g., hosted on GitHub Pages) using API Gateway and an API Key.
-Overall Architecture
+Overall Architecture:
 
-Front-end (e.g., GitHub Pages): User interacts with your chat interface. JavaScript makes API calls to API Gateway.
-API Gateway: Public-facing entry point. Authenticates requests using an API Key. Routes valid requests to your private Cloud Run service.
-Cloud Run (Private LLM Backend): Runs your FastAPI application with the TinyLlama model. Only callable by authenticated identities (in this case, API Gateway's service account).
+1. Front-end (e.g., GitHub Pages): User interacts with your chat interface. JavaScript makes API calls to API Gateway.
+2. API Gateway: Public-facing entry point. Authenticates requests using an API Key. Routes valid requests to your private Cloud Run service.
+3. Cloud Run (Private LLM Backend): Runs your FastAPI application with the TinyLlama model. Only callable by authenticated identities (in this case, API Gateway's service account).
 
-Phase 1: Prepare Your TinyLlama Backend Application
-File Structure
-Ensure you have a directory (e.g., tinyllama-backend) with the following files:
+# Phase 1: Prepare Your TinyLlama Backend Application
+1. File Structure
+Ensure you have a directory (e.g., ```tinyllama-backend```) with the following files:
 
-main.py: Your FastAPI application code using the Hugging Face pipeline for TinyLlama. Configure CORS to allow your GitHub Pages origin (e.g., https://YOUR_GITHUB_USERNAME.github.io).
-
+- ```main.py```: Your FastAPI application code using the Hugging Face pipeline for TinyLlama. Configure CORS to allow your GitHub Pages origin (e.g., ```https://YOUR_GITHUB_USERNAME.github.io```).
+```python
 # Inside main.py
 origins = [
     "https://YOUR_GITHUB_USERNAME.github.io", # Replace with your actual GitHub Pages URL
@@ -24,26 +24,26 @@ app.add_middleware(
     allow_methods=["POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-API-Key"], # X-API-Key for the API Key
 )
+```
+Replace ```YOUR_GITHUB_USERNAME.github.io``` with your actual GitHub Pages URL.
 
-Replace YOUR_GITHUB_USERNAME.github.io with your actual GitHub Pages URL.
+- ```Dockerfile```: Defines how to build the container image for your FastAPI application (installs Python, dependencies, copies code, and runs Uvicorn).
+- ```requirements.txt```: Lists all Python dependencies (e.g., ```fastapi```, ```uvicorn```, ```torch```, ```transformers```, ```python-dotenv```, ```psutil```, ```sentencepiece```, ```accelerate```).
 
-Dockerfile: Defines how to build the container image for your FastAPI application (installs Python, dependencies, copies code, and runs Uvicorn).
-requirements.txt: Lists all Python dependencies (e.g., fastapi, uvicorn, torch, transformers, python-dotenv, psutil, sentencepiece, accelerate).
+# Phase 2: Deploy TinyLlama Backend as a Private Cloud Run Service
+1. Setup Google Cloud CLI (gcloud)
 
-Phase 2: Deploy TinyLlama Backend as a Private Cloud Run Service
-Setup Google Cloud CLI (gcloud)
-
-Install gcloud if you haven't: Install gcloud CLI
-Authenticate and configure your project:
-
+- Install ```gcloud``` if you haven't: Install gcloud CLI
+- Authenticate and configure your project:
+```
 gcloud auth login
 gcloud auth application-default login
 export PROJECT_ID=your-gcp-project-id # Replace with your Project ID
 gcloud config set project $PROJECT_ID
+```
 
-
-Enable necessary APIs:
-
+- Enable necessary APIs:
+```
 gcloud services enable run.googleapis.com \
     cloudbuild.googleapis.com \
     iam.googleapis.com \
@@ -51,14 +51,16 @@ gcloud services enable run.googleapis.com \
     apigateway.googleapis.com \
     servicecontrol.googleapis.com \
     servicemanagement.googleapis.com
-
-Build Your Docker Image using Cloud Build
+```
+2. Build Your Docker Image using Cloud Build
 Navigate to your tinyllama-backend directory in your terminal.
+```
 # Make sure you are in the directory containing your Dockerfile, main.py, etc.
 gcloud builds submit --tag gcr.io/$PROJECT_ID/tinylama-llm-backend:v1
-
+```
 This builds the image and pushes it to Google Container Registry (GCR).
-Deploy to Cloud Run as a Private Service
+3. Deploy to Cloud Run as a Private Service
+```
 export REGION=us-central1 # Or your preferred region
 export CLOUD_RUN_SERVICE_NAME=tinylama-llm-backend-private
 
@@ -72,29 +74,34 @@ gcloud run deploy $CLOUD_RUN_SERVICE_NAME \
     --no-allow-unauthenticated \
     --min-instances=0 \
     --timeout=300s
+```
 
-
---no-allow-unauthenticated: This is critical. It makes your service private.
-
-Note the service URL output by this command. You'll need it for the API Gateway config. It will look like https://[SERVICE_NAME]-[PROJECT_HASH]-[REGION_CODE].a.run.app.
-Phase 3: Set Up API Gateway
-Create a Service Account for API Gateway
+- ```--no-allow-unauthenticated:``` This is critical. It makes your service private.
+- Note the service URL output by this command. You'll need it for the API Gateway config. It will look like 
+```https://[SERVICE_NAME]-[PROJECT_HASH]-[REGION_CODE].a.run.app.```
+# Phase 3: Set Up API Gateway
+1. Create a Service Account for API Gateway
 This service account will be used by API Gateway to securely invoke your private Cloud Run service.
+```
 export APIGW_INVOKER_SA_NAME=tinylama-apigw-invoker
 export APIGW_INVOKER_SA_EMAIL=$APIGW_INVOKER_SA_NAME@$PROJECT_ID.iam.gserviceaccount.com
 
 gcloud iam service-accounts create $APIGW_INVOKER_SA_NAME \
     --display-name="TinyLlama API Gateway Invoker"
-
-Grant "Cloud Run Invoker" Role to the Service Account
+```
+2. Grant "Cloud Run Invoker" Role to the Service Account
 Allow the new service account to call your private Cloud Run service.
+```
 gcloud run services add-iam-policy-binding $CLOUD_RUN_SERVICE_NAME \
     --member="serviceAccount:$APIGW_INVOKER_SA_EMAIL" \
     --role="roles/run.invoker" \
     --region=$REGION
-
-Create an API Gateway OpenAPI Specification
-Create a file named tinylama-openapi-spec.yaml. Replace YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL with the URL of your deployed private Cloud Run service (from Phase 2).
+```
+3. Create an API Gateway OpenAPI Specification
+Create a file named ```tinylama-openapi-spec.yaml```. 
+Replace ```YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL``` with the URL of your deployed private Cloud Run service (from Phase 2).
+```yaml
+#tinylama-openapi-spec.yaml
 swagger: '2.0'
 info:
   title: TinyLlama Chat API
@@ -144,13 +151,12 @@ securityDefinitions:
     type: apiKey
     name: x-api-key # Standard header name for API keys
     in: header
+```
+- Important: The ```x-google-backend.address``` should be the full HTTPS URL of your private Cloud Run service.
+- The ```x-google-backend.jwt_audience``` should also be this same URL for Cloud Run backends.
 
-Important:
-
-The x-google-backend.address should be the full HTTPS URL of your private Cloud Run service.
-The x-google-backend.jwt_audience should also be this same URL for Cloud Run backends.
-
-Create an API Config from the OpenAPI Specification
+4. Create an API Config from the OpenAPI Specification
+```
 export API_ID=tinylama-chat-api
 export API_CONFIG_ID=tinylama-chat-api-config-v1
 
@@ -159,11 +165,12 @@ gcloud api-gateway api-configs create $API_CONFIG_ID \
   --openapi-spec=tinylama-openapi-spec.yaml \
   --project=$PROJECT_ID \
   --backend-auth-service-account=$APIGW_INVOKER_SA_EMAIL
+```
 
+- ```--backend-auth-service-account:``` This tells API Gateway to use the specified service account to authenticate to your backend Cloud Run service.
 
---backend-auth-service-account: This tells API Gateway to use the specified service account to authenticate to your backend Cloud Run service.
-
-Create the API Gateway
+5. Create the API Gateway
+```
 export GATEWAY_ID=tinylama-chat-gateway
 
 gcloud api-gateway gateways create $GATEWAY_ID \
@@ -171,43 +178,39 @@ gcloud api-gateway gateways create $GATEWAY_ID \
   --api-config=$API_CONFIG_ID \
   --location=$REGION \
   --project=$PROJECT_ID
+```
 
-This step can take a few minutes. After it's complete, it will output a Gateway URL (e.g., https://tinylama-chat-gateway-xxxx.nw.gateway.dev). This is the URL your front-end will use.
-Phase 4: Secure API Gateway with an API Key
-Create an API Key
+This step can take a few minutes. After it's complete, it will output a Gateway URL (e.g., ```https://tinylama-chat-gateway-xxxx.nw.gateway.dev```). This is the URL your front-end will use.
+# Phase 4: Secure API Gateway with an API Key
+1. Create an API Key
+- Go to Google Cloud Console -> "APIs & Services" -> "Credentials".
+- Click "+ CREATE CREDENTIALS" -> "API key".
+- Copy the generated API key immediately and store it securely. Let's call it ```YOUR_GENERATED_API_KEY```.
 
-Go to Google Cloud Console -> "APIs & Services" -> "Credentials".
-Click "+ CREATE CREDENTIALS" -> "API key".
-Copy the generated API key immediately and store it securely. Let's call it YOUR_GENERATED_API_KEY.
+2. Restrict the API Key
+- Find the API key you just created in the list. Click on its name (or the pencil icon) to edit it.
+- Under "API restrictions":
+    - Select "Restrict key".
+    - In the "Select APIs" dropdown, find and select your API Gateway API (e.g., "TinyLlama Chat API" or the service name associated with ```tinylama-chat-api.apigateway.YOUR_PROJECT_ID.cloud.goog```).
 
-Restrict the API Key
+- Under "Application restrictions":
+    - Select "HTTP referrers (web sites)".
+    - Click "+ ADD AN ITEM".
+    - Enter your GitHub Pages URL (e.g., ```https://YOUR_GITHUB_USERNAME.github.io/*```). The /* at the end acts as a wildcard for paths within that domain.
+- Click "Save".
 
-Find the API key you just created in the list. Click on its name (or the pencil icon) to edit it.
-Under "API restrictions":
-Select "Restrict key".
-In the "Select APIs" dropdown, find and select your API Gateway API (e.g., "TinyLlama Chat API" or the service name associated with tinylama-chat-api.apigateway.YOUR_PROJECT_ID.cloud.goog).
+# Phase 5: Connect Your Remote Front-end (e.g., GitHub Pages) to API Gateway
+1. Update Front-end JavaScript (e.g., in index.html)
 
-
-Under "Application restrictions":
-Select "HTTP referrers (web sites)".
-Click "+ ADD AN ITEM".
-Enter your GitHub Pages URL (e.g., https://YOUR_GITHUB_USERNAME.github.io/*). The /* at the end acts as a wildcard for paths within that domain.
-
-
-Click "Save".
-
-Phase 5: Connect Your Remote Front-end (e.g., GitHub Pages) to API Gateway
-Update Front-end JavaScript (e.g., in index.html)
-
-API URL: Change the backendUrl (or equivalent variable) in your JavaScript to the API Gateway URL (from Phase 3), appending the /chat path.
-
+- API URL: Change the ```backendUrl``` (or equivalent variable) in your JavaScript to the API Gateway URL (from Phase 3), appending the ```/chat``` path.
+```
 // In your index.html script
 const gatewayApiUrl = 'https://YOUR_API_GATEWAY_URL/chat'; // Replace with your actual Gateway URL + /chat
 const apiKey = 'YOUR_GENERATED_API_KEY'; // Replace with the API key you created
+```
 
-
-API Key Header: Modify your API call to include the API key in the x-api-key header.
-
+- API Key Header: Modify your API call to include the API key in the x-api-key header.
+```
 // Inside your sendMessageToBackend function (or similar)
 try {
     const response = await fetch(gatewayApiUrl, { // Use gatewayApiUrl
@@ -222,37 +225,45 @@ try {
     console.error('Error sending message:', error);
     // Display error to user
 }
-
-Commit and Push Front-end Changes
+```
+2. Commit and Push Front-end Changes
 Save your front-end files, commit, and push to GitHub (or your hosting platform) to deploy the changes.
-Phase 6: Testing
+# Phase 6: Testing
 
-Open your GitHub Pages site (or wherever your front-end is hosted).
-Try sending messages through the chat interface.
-Check the browser's developer console for any errors (Network tab for API call status, Console tab for JavaScript errors).
-If issues arise, check the logs for API Gateway and your private Cloud Run service in the Google Cloud Console.
+1. Open your GitHub Pages site (or wherever your front-end is hosted).
+2. Try sending messages through the chat interface.
+3. Check the browser's developer console for any errors (Network tab for API call status, Console tab for JavaScript errors).
+4. If issues arise, check the logs for API Gateway and your private Cloud Run service in the Google Cloud Console.
 
-Phase 7: Resource Clean Up (Optional)
+# Phase 7: Resource Clean Up (Optional)
 If you want to remove the deployed resources to avoid ongoing costs:
-Delete API Gateway
+1. Delete API Gateway:
+```
 gcloud api-gateway gateways delete $GATEWAY_ID --location=$REGION --project=$PROJECT_ID --quiet
+```
 
-Delete API Config
+2. Delete API Config
+```
 gcloud api-gateway api-configs delete $API_CONFIG_ID --api=$API_ID --project=$PROJECT_ID --quiet
+```
 
-Delete APIම
-Delete API Definition (Optional)
+3. Delete API Definition (Optional)
+```
 gcloud api-gateway apis delete $API_ID --project=$PROJECT_ID --quiet
-
-Delete API Key
+```
+4. Delete API Key
 Go to GCP Console -> APIs & Services -> Credentials. Find your API key and delete it.
-Delete Cloud Run Service
+5. Delete Cloud Run Service
+```
 gcloud run services delete $CLOUD_RUN_SERVICE_NAME --region=$REGION --project=$PROJECT_ID --quiet
-
-Delete Container Image
+```
+6. Delete Container Image
+```
 gcloud container images delete gcr.io/$PROJECT_ID/tinylama-llm-backend:v1 --force-delete-tags --quiet
-
-Delete Service Account
+```
+7. Delete Service Account
+```
 gcloud iam service-accounts delete $APIGW_INVOKER_SA_EMAIL --project=$PROJECT_ID --quiet
+```
 
-This provides a secure and robust way to deploy your TinyLlama backend and connect it to your front-end. Remember to replace all placeholder values (like YOUR_GITHUB_USERNAME, your-gcp-project-id, YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL, YOUR_API_GATEWAY_URL, YOUR_GENERATED_API_KEY) with your actual values.
+This provides a secure and robust way to deploy your TinyLlama backend and connect it to your front-end. Remember to replace all placeholder values (like ```YOUR_GITHUB_USERNAME```, ```your-gcp-project-id```, ```YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL```, ```YOUR_API_GATEWAY_URL```, ```YOUR_GENERATED_API_KEY```) with your actual values.
