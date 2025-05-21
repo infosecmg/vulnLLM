@@ -634,10 +634,11 @@ flowchart LR
     D --> A
     A --ChatBot Response--> 1(["User"])
     1 --User Prompt--> A
+    ```
 3. If issues arise, check:
   - Browser developer console (for front-end errors or CORS issues with the Cloud Function).
   - Logs for your Proxy Cloud Function in Google Cloud Console (Functions -> Select your function -> Logs).
   - Logs for your API Gateway.
   - Logs for your private Cloud Run LLM backend service.
-```
+
 This setup provides a more secure way to handle your API Gateway API Key by keeping it out of the client-side code.
