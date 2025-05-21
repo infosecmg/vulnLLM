@@ -101,16 +101,14 @@ gcloud run services add-iam-policy-binding $CLOUD_RUN_SERVICE_NAME \
 Create a file named ```tinylama-openapi-spec.yaml```. 
 Replace ```YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL``` with the URL of your deployed private Cloud Run service (from Phase 2).
 ```yaml
-#tinylama-openapi-spec.yaml
-swagger: '2.0'
+# tinylama-openapi-spec.yaml
+openapi: '3.0.0' # Using OpenAPI 3.0.0
 info:
   title: TinyLlama Chat API
   description: API Gateway for TinyLlama Chatbot on Cloud Run
   version: '1.0.0'
-schemes:
-  - https
-produces:
-  - application/json
+servers: # OpenAPI 3.0.0 uses 'servers' instead of 'schemes' and 'host'/'basePath'
+  - url: https://ignored-by-google-cloud-api-gateway.com # This URL is ignored by API Gateway but required by spec
 paths:
   /chat: # This is the public path your front-end will call
     post:
@@ -120,17 +118,18 @@ paths:
         address: YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL # e.g., https://tinylama-llm-backend-private-xyz.a.run.app
         path_translation: APPEND_PATH_TO_ADDRESS # Appends /chat to the backend address
         jwt_audience: YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL # Should be the same as address for Cloud Run
-      security:
-        - api_key: [] # Indicates this path requires an API key
-      requestBody:
+      requestBody: # Valid in OpenAPI 3.0.0
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: # Specify required properties for the body object
+                - user_prompt
               properties:
                 user_prompt:
                   type: string
+                  example: "Hello, how are you?"
                 conversation_history:
                   type: array
                   items:
@@ -138,19 +137,28 @@ paths:
                     properties:
                       role:
                         type: string
+                        example: "user"
                       content:
                         type: string
+                        example: "Previous message"
+                  example: [{"role": "user", "content": "Hi"}]
       responses:
         '200':
           description: A successful response
-          schema:
-            type: object # Define your expected response structure here
+          content: # OpenAPI 3.0.0 uses 'content' for responses
+            application/json:
+              schema:
+                type: object # Define your expected response structure here
         # Add other responses like 400, 403, 500 etc.
-securityDefinitions:
-  api_key:
-    type: apiKey
-    name: x-api-key # Standard header name for API keys
-    in: header
+      security:
+        - api_key_security: [] # Reference the security scheme defined below
+components: # OpenAPI 3.0.0 uses 'components.securitySchemes'
+  securitySchemes:
+    api_key_security: # Arbitrary name for the security scheme
+      type: apiKey
+      name: x-api-key # Standard header name for API keys
+      in: header
+
 ```
 - Important: The ```x-google-backend.address``` should be the full HTTPS URL of your private Cloud Run service.
 - The ```x-google-backend.jwt_audience``` should also be this same URL for Cloud Run backends.

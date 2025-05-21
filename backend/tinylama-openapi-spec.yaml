@@ -1,0 +1,57 @@
+# tinylama-openapi-spec.yaml
+openapi: '3.0.0' # Using OpenAPI 3.0.0
+info:
+  title: TinyLlama Chat API
+  description: API Gateway for TinyLlama Chatbot on Cloud Run
+  version: '1.0.0'
+servers: # OpenAPI 3.0.0 uses 'servers' instead of 'schemes' and 'host'/'basePath'
+  - url: https://ignored-by-google-cloud-api-gateway.com # This URL is ignored by API Gateway but required by spec
+paths:
+  /chat: # This is the public path your front-end will call
+    post:
+      summary: Proxy to TinyLlama chat backend
+      operationId: chatProxy
+      x-google-backend:
+        address: YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL # e.g., https://tinylama-llm-backend-private-xyz.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS # Appends /chat to the backend address
+        jwt_audience: YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL # Should be the same as address for Cloud Run
+      requestBody: # Valid in OpenAPI 3.0.0
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: # Specify required properties for the body object
+                - user_prompt
+              properties:
+                user_prompt:
+                  type: string
+                  example: "Hello, how are you?"
+                conversation_history:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        example: "user"
+                      content:
+                        type: string
+                        example: "Previous message"
+                  example: [{"role": "user", "content": "Hi"}]
+      responses:
+        '200':
+          description: A successful response
+          content: # OpenAPI 3.0.0 uses 'content' for responses
+            application/json:
+              schema:
+                type: object # Define your expected response structure here
+        # Add other responses like 400, 403, 500 etc.
+      security:
+        - api_key_security: [] # Reference the security scheme defined below
+components: # OpenAPI 3.0.0 uses 'components.securitySchemes'
+  securitySchemes:
+    api_key_security: # Arbitrary name for the security scheme
+      type: apiKey
+      name: x-api-key # Standard header name for API keys
+      in: header

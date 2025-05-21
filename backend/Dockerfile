@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED=TRUE
 ENV HF_HUB_DISABLE_PROGRESS_BARS=1
 # Disable pip cache to reduce image size slightly.
 ENV PIP_NO_CACHE_DIR=off
-
+ENV PORT=8080
 # 3. Set Working Directory
 # All subsequent commands (COPY, RUN, CMD) will be relative to this directory.
 WORKDIR /app
@@ -47,4 +47,4 @@ EXPOSE ${PORT}
 # "--workers", "1" is often recommended for Cloud Run with CPU-bound tasks like ML inference
 # to avoid issues with multi-processing and shared resources, especially with Hugging Face models.
 # You can adjust the number of workers based on testing and the nature of your workload.
-CMD ["uvicorn", "LLM_Backend:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+CMD ["uvicorn", "LLM_Backend:app", "--host", "0.0.0.0", "--port", ${PORT}, "--workers", "1"]
