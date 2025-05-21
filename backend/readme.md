@@ -213,77 +213,8 @@ gcloud api-gateway gateways describe $GATEWAY_ID \
 - Under "Application restrictions":
     - Select "HTTP referrers (web sites)".
     - Click "+ ADD AN ITEM".
-    - Enter your GitHub Pages URL (e.g., ```https://YOUR_GITHUB_USERNAME.github.io/*```). The /* at the end acts as a wildcard for paths within that domain.
+    - Enter your proxy URL (e.g., ```https://YOUR_GITHUB_USERNAME.github.io/*```). The /* at the end acts as a wildcard for paths within that domain.
 - Click "Save".
-
-## Phase 5: Connect Your Remote Front-end (e.g., GitHub Pages) to API Gateway
-1. Update Front-end JavaScript (e.g., in index.html)
-
-- API URL: Change the ```backendUrl``` (or equivalent variable) in your JavaScript to the API Gateway URL (from Phase 3), appending the ```/chat``` path.
-```
-// In your index.html script
-const gatewayApiUrl = 'https://YOUR_API_GATEWAY_URL/chat'; // Replace with your actual Gateway URL + /chat
-const apiKey = 'YOUR_GENERATED_API_KEY'; // Replace with the API key you created
-```
-
-- API Key Header: Modify your API call to include the API key in the x-api-key header.
-```
-// Inside your sendMessageToBackend function (or similar)
-try {
-    const response = await fetch(gatewayApiUrl, { // Use gatewayApiUrl
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey // Add the API key header
-        },
-        body: JSON.stringify(payload)
-    });
-} catch (error) {
-    console.error('Error sending message:', error);
-    // Display error to user
-}
-```
-2. Commit and Push Front-end Changes
-Save your front-end files, commit, and push to GitHub (or your hosting platform) to deploy the changes.
-## Phase 6: Testing
-
-1. Open your GitHub Pages site (or wherever your front-end is hosted).
-2. Try sending messages through the chat interface.
-3. Check the browser's developer console for any errors (Network tab for API call status, Console tab for JavaScript errors).
-4. If issues arise, check the logs for API Gateway and your private Cloud Run service in the Google Cloud Console.
-
-## Phase 7: Resource Clean Up (Optional)
-If you want to remove the deployed resources to avoid ongoing costs:
-1. Delete API Gateway:
-```
-gcloud api-gateway gateways delete $GATEWAY_ID --location=$REGION --project=$PROJECT_ID --quiet
-```
-
-2. Delete API Config
-```
-gcloud api-gateway api-configs delete $API_CONFIG_ID --api=$API_ID --project=$PROJECT_ID --quiet
-```
-
-3. Delete API Definition (Optional)
-```
-gcloud api-gateway apis delete $API_ID --project=$PROJECT_ID --quiet
-```
-4. Delete API Key
-Go to GCP Console -> APIs & Services -> Credentials. Find your API key and delete it.
-5. Delete Cloud Run Service
-```
-gcloud run services delete $CLOUD_RUN_SERVICE_NAME --region=$REGION --project=$PROJECT_ID --quiet
-```
-6. Delete Container Image
-```
-gcloud container images delete gcr.io/$PROJECT_ID/tinylama-llm-backend:v1 --force-delete-tags --quiet
-```
-7. Delete Service Account
-```
-gcloud iam service-accounts delete $APIGW_INVOKER_SA_EMAIL --project=$PROJECT_ID --quiet
-```
-
-This provides a secure and robust way to deploy your TinyLlama backend and connect it to your front-end. Remember to replace all placeholder values (like ```YOUR_GITHUB_USERNAME```, ```your-gcp-project-id```, ```YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL```, ```YOUR_API_GATEWAY_URL```, ```YOUR_GENERATED_API_KEY```) with your actual values.
 
 ---
 
@@ -311,14 +242,12 @@ config:
 flowchart TD
         A(["Start"])
         A --> B{"Front-end"}
-        subgraph Chat bot
+        subgraph Client Side
         B --> C["HTTP Request"]
         end
-        subgraph Forward Proxy
+        subgraph Server Side
         C --> D["Proxy Cloud Function"]
         D --> E["Authenticated HTTP Request with API Key"]
-        end
-        subgraph Backend
         E --> F[" API Gateway"]
         F --> G[" Private Cloud Run LLM Backend"]
         end
@@ -634,7 +563,7 @@ flowchart LR
     D --> A
     A --ChatBot Response--> 1(["User"])
     1 --User Prompt--> A
-    ```
+```
 3. If issues arise, check:
   - Browser developer console (for front-end errors or CORS issues with the Cloud Function).
   - Logs for your Proxy Cloud Function in Google Cloud Console (Functions -> Select your function -> Logs).
@@ -642,3 +571,44 @@ flowchart LR
   - Logs for your private Cloud Run LLM backend service.
 
 This setup provides a more secure way to handle your API Gateway API Key by keeping it out of the client-side code.
+
+
+## Phase 5: Testing
+
+1. Open your GitHub Pages site (or wherever your front-end is hosted).
+2. Try sending messages through the chat interface.
+3. Check the browser's developer console for any errors (Network tab for API call status, Console tab for JavaScript errors).
+4. If issues arise, check the logs for API Gateway and your private Cloud Run service in the Google Cloud Console.
+
+## Phase 6: Resource Clean Up (Optional)
+If you want to remove the deployed resources to avoid ongoing costs:
+1. Delete API Gateway:
+```
+gcloud api-gateway gateways delete $GATEWAY_ID --location=$REGION --project=$PROJECT_ID --quiet
+```
+
+2. Delete API Config
+```
+gcloud api-gateway api-configs delete $API_CONFIG_ID --api=$API_ID --project=$PROJECT_ID --quiet
+```
+
+3. Delete API Definition (Optional)
+```
+gcloud api-gateway apis delete $API_ID --project=$PROJECT_ID --quiet
+```
+4. Delete API Key
+Go to GCP Console -> APIs & Services -> Credentials. Find your API key and delete it.
+5. Delete Cloud Run Service
+```
+gcloud run services delete $CLOUD_RUN_SERVICE_NAME --region=$REGION --project=$PROJECT_ID --quiet
+```
+6. Delete Container Image
+```
+gcloud container images delete gcr.io/$PROJECT_ID/tinylama-llm-backend:v1 --force-delete-tags --quiet
+```
+7. Delete Service Account
+```
+gcloud iam service-accounts delete $APIGW_INVOKER_SA_EMAIL --project=$PROJECT_ID --quiet
+```
+
+This provides a secure and robust way to deploy your TinyLlama backend and connect it to your front-end. Remember to replace all placeholder values (like ```YOUR_GITHUB_USERNAME```, ```your-gcp-project-id```, ```YOUR_PRIVATE_CLOUD_RUN_SERVICE_URL```, ```YOUR_API_GATEWAY_URL```, ```YOUR_GENERATED_API_KEY```) with your actual values.
