@@ -5,3 +5,5 @@ transformers
 psutil
 pydantic
 accelerate
+functions-framework
+requests
