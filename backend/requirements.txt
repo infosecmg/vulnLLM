@@ -7,3 +7,4 @@ pydantic
 accelerate
 functions-framework
 requests
+httpx

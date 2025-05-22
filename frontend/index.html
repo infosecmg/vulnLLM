@@ -3,231 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Assistant</title>
+    <title>AI Chat Assistant - Cybered CTF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="theme.css"> {/* Ensuring theme.css is linked */}
+    <style>
+        /* Minimal essential styles that were part of the original structure or for basic functionality */
+        .message-animation { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .typing-indicator span {
+            height: 8px; width: 8px; margin: 0 1px; background-color: #9ca3af; /* Default, theme.css might override */
+            display: inline-block;
+            border-radius: 50%; animation: typing 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        .chat-container { 
+            height: calc(100vh - 220px); /* Default, adjust if header/footer height changes */
+        }
+        .thought-bubble { /* Added for simulated thoughts */
+            background-color: #4b5563; 
+            color: #e5e7eb; 
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem; 
+            margin-top: 0.25rem;
+            opacity: 0.8;
+        }
+        .dark .thought-bubble {
+             background-color: #374151;
+             color: #9ca3af;
+        }
+    </style>
 </head>
-<body class="bg-white text-black dark:bg-black dark:text-gray-200 transition-colors duration-300">
-    <div class="max-w-4xl mx-auto p-4">
-        <header class="bg-gray-700 text-white rounded-t-lg p-4 shadow-md">
+<body class="bg-white text-black dark:bg-black dark:text-gray-200 transition-colors duration-300 font-sans">
+    <div class="max-w-4xl mx-auto p-0 sm:p-4 flex flex-col h-screen">
+        <header class="bg-gray-700 text-white rounded-t-lg p-4 shadow-md flex-shrink-0">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-[#000000] flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-full bg-black flex items-center justify-center">
                         <i class="fa-solid fa-bug text-xl text-[#FCB813]"></i>
                     </div>
                     <div>
                         <h1 class="text-xl font-bold">Cybered CTF</h1>
-                        <p class="text-xs text-gray-300">Can you get the flags</p>
+                        <p class="text-xs text-gray-300">Can you get the flags?</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <button id="theme-toggle" aria-label="Switch to light mode" class="text-[#FFFFFF] hover:text-yellow-400 transition p-2 rounded-md">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button id="theme-toggle" aria-label="Switch theme" class="text-white hover:text-[#FCB813] transition p-2 rounded-md">
                         <i class="fas fa-sun text-xl"></i>
                     </button>
-                    <button id="clear-chat" class="text-[#FFFFFF] hover:text-yellow-400 transition flex items-center space-x-1 p-2 rounded-md">
-                        <i class="fas fa-trash-alt text-xl"></i>
-                        <span>Clear Chat</span>
+                    <button id="clear-chat" class="text-white hover:text-[#FCB813] transition flex items-center space-x-1 p-2 rounded-md text-sm sm:text-base">
+                        <i class="fas fa-trash-alt text-lg sm:text-xl"></i>
+                        <span class="hidden sm:inline">Clear Chat</span>
                     </button>
                 </div>
             </div>
         </header>
 
-        <div class="chat-container shadow-lg overflow-y-auto p-4" id="chat-window">
-            </div>
+        <div class="chat-container shadow-lg overflow-y-auto p-4 flex-grow" id="chat-window">
+            {/* Chat messages will be appended here */}
+        </div>
 
-        <div class="input-area-container-themed rounded-b-lg shadow-lg p-4">
-            <form id="chat-form" class="flex space-x-2">
+        <div class="input-area-container-themed rounded-b-lg shadow-lg p-4 flex-shrink-0">
+            <form id="chat-form" class="flex space-x-2 items-center">
                 <input
                     type="text"
                     id="user-input"
                     placeholder="Type your message here..."
-                    class="user-input-themed flex-1 rounded-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#FCB813] dark:focus:ring-[#FCB813] focus:border-transparent"
+                    class="user-input-themed flex-1 rounded-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#FCB813] dark:focus:ring-[#EAA800] focus:border-transparent text-sm"
                     autocomplete="off"
                 >
                 <button
                     type="submit"
-                    class="bg-[#000000] text-[#FCB813] rounded-full w-12 h-12 flex items-center justify-center hover:bg-[#EAA800] transition"
+                    aria-label="Send message"
+                    class="bg-gray-700 dark:bg-black text-[#FCB813] rounded-full w-12 h-12 flex items-center justify-center hover:bg-[#EAA800] dark:hover:bg-yellow-600 transition transform hover:scale-110"
                 >
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </form>
             <div class="footer-text-themed mt-2 text-xs text-center">
-                <p>Do not trust AI it can be wrong!</p>
+                <p>Responses may be inaccurate or incomplete. Verify important information.</p>
             </div>
         </div>
     </div>
 
     <script>
-    // Ensure this script is loaded after the DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-        console.log("Chat Assistant Script Loaded (Custom CSS Divs)"); // DEBUG
+        console.log("Chat Assistant Script Loaded");
 
-        // Get references to all necessary DOM elements
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
         const chatWindow = document.getElementById('chat-window');
         const clearChatBtn = document.getElementById('clear-chat');
         const themeToggle = document.getElementById('theme-toggle');
-        const htmlElement = document.documentElement; // Reference to the <html> tag
+        const htmlElement = document.documentElement;
+        const toggleIconElement = themeToggle ? themeToggle.querySelector('i') : null;
 
-        if (!themeToggle) console.error("Theme toggle button not found!"); 
-        if (!htmlElement) console.error("HTML element not found!"); 
+        const sunIconClass = 'fa-sun';
+        const moonIconClass = 'fa-moon';
 
+        let currentChatMessages = []; 
 
-        let currentChatMessages = [];
         const welcomeMessageHTML = `
         <div class="text-center py-8" id="welcome-message">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-700 flex items-center justify-center">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-700 dark:bg-gray-600 flex items-center justify-center">
                 <i class="fas fa-comments text-[#FCB813] text-2xl"></i>
             </div>
             <h2 class="text-xl font-medium mb-2 welcome-h2-themed">How can I help you today?</h2>
-            <p class="text-sm max-w-md mx-auto welcome-p-themed">Ask me anything and I'll do my best to assist you with your questions.</p>
+            <p class="text-sm max-w-md mx-auto welcome-p-themed">Ask me anything for your CTF challenge!</p>
         </div>`;
 
-        const sunIconClass = 'fa-sun'; 
-        const moonIconClass = 'fa-moon'; 
-        const toggleIconElement = themeToggle ? themeToggle.querySelector('i') : null; 
-        if (!toggleIconElement) console.error("Toggle icon element (<i>) not found!"); 
-
         function applyThemePreference(theme) {
-            console.log("Applying theme:", theme); 
             if (theme === 'dark') {
-                htmlElement.classList.add('dark'); 
+                htmlElement.classList.add('dark');
                 if (toggleIconElement) {
-                    toggleIconElement.classList.remove(moonIconClass); 
-                    toggleIconElement.classList.add(sunIconClass);
+                    toggleIconElement.classList.remove(sunIconClass);
+                    toggleIconElement.classList.add(moonIconClass);
                 }
                 if (themeToggle) themeToggle.setAttribute('aria-label', 'Switch to light mode');
-            } else { 
-                htmlElement.classList.remove('dark'); 
+            } else {
+                htmlElement.classList.remove('dark');
                 if (toggleIconElement) {
-                    toggleIconElement.classList.remove(sunIconClass); 
-                    toggleIconElement.classList.add(moonIconClass);
+                    toggleIconElement.classList.remove(moonIconClass);
+                    toggleIconElement.classList.add(sunIconClass);
                 }
                 if (themeToggle) themeToggle.setAttribute('aria-label', 'Switch to dark mode');
             }
-            console.log("HTML classList after apply:", htmlElement.classList.toString()); 
         }
 
         if (themeToggle) {
             themeToggle.addEventListener('click', () => {
-                console.log("Theme toggle clicked"); 
                 const isDarkModeCurrently = htmlElement.classList.contains('dark');
                 const newTheme = isDarkModeCurrently ? 'light' : 'dark';
-                console.log("Current theme is dark:", isDarkModeCurrently, "New theme will be:", newTheme); 
-                localStorage.setItem('theme', newTheme); 
+                localStorage.setItem('theme', newTheme);
                 applyThemePreference(newTheme);
             });
         }
 
-        let initialThemeToApply = 'dark'; 
-        const savedThemeFromStorage = localStorage.getItem('theme');
-        console.log("Saved theme from storage:", savedThemeFromStorage); 
-        
-        if (savedThemeFromStorage) {
-            initialThemeToApply = savedThemeFromStorage; 
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme) {
+            applyThemePreference(savedTheme);
+        } else {
+            applyThemePreference(prefersDark ? 'dark' : 'light');
         }
-        console.log("Initial theme to apply:", initialThemeToApply); 
-        applyThemePreference(initialThemeToApply);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (!localStorage.getItem('theme')) {
+                applyThemePreference(e.matches ? 'dark' : 'light');
+            }
+        });
 
-        const prefersDarkColorSchemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
-        if (prefersDarkColorSchemeMedia) {
-            prefersDarkColorSchemeMedia.addEventListener('change', (e) => {
-                console.log("OS theme preference changed. Matches dark:", e.matches); 
-                if (!localStorage.getItem('theme')) { 
-                    console.log("Applying OS theme preference as no user choice saved."); 
-                    applyThemePreference(e.matches ? 'dark' : 'light');
-                }
-            });
+        function escapeHTML(str) {
+            const p = document.createElement('p');
+            p.appendChild(document.createTextNode(str));
+            return p.innerHTML;
         }
 
-        loadChatHistory();
-        
-        if (chatForm) {
-            chatForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const message = userInput.value.trim();
-                if (message) {
-                    addUserMessage(message); 
-                    userInput.value = ''; 
-                    sendMessageToBackend(message); 
-                }
-            });
-        }
-        
-        if (clearChatBtn) {
-            clearChatBtn.addEventListener('click', function() {
-                localStorage.removeItem('chatMessagesArray'); 
-                currentChatMessages = []; 
-                if (chatWindow) chatWindow.innerHTML = welcomeMessageHTML; 
-                const wm = document.getElementById('welcome-message');
-                if (wm) wm.style.display = 'block'; 
-                if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight; 
-            });
-        }
-        
-        function hideWelcomeMessage() {
-            const wm = document.getElementById('welcome-message');
-            if (wm) wm.style.display = 'none';
-        }
-
-        function _renderUserMessage(message) {
+        function _renderUserMessage(messageContent) {
             hideWelcomeMessage();
             const messageDiv = document.createElement('div');
             messageDiv.className = 'flex justify-end mb-4 message-animation';
             messageDiv.innerHTML = `
-                <div class="max-w-xs md:max-w-md lg:max-w-lg bg-gray-700 text-white rounded-lg p-3 shadow">
-                    <p>${message.replace(/\n/g, '<br>')}</p>
+                <div class="max-w-[70%] sm:max-w-xs md:max-w-md lg:max-w-lg bg-sky-600 dark:bg-sky-700 text-white rounded-lg p-3 shadow">
+                    <p>${escapeHTML(messageContent).replace(/\n/g, '<br>')}</p>
                 </div>
-                <div class="ml-2 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-[#FCB813]">
+                <div class="ml-2 w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-600 flex items-center justify-center text-white text-sm">
                     <i class="fa-solid fa-user-secret"></i>
                 </div>`;
             if (chatWindow) chatWindow.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        // Creates a new bot message container and returns the <p> element for streaming
+        function _createBotMessageStreamingElement() {
+            hideWelcomeMessage();
+            // Remove any previous streaming message if it exists
+            const existingStreamingMessage = chatWindow.querySelector('.bot-streaming-message-text');
+            if (existingStreamingMessage && existingStreamingMessage.parentElement && existingStreamingMessage.parentElement.parentElement) {
+                 existingStreamingMessage.parentElement.parentElement.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex mb-4 message-animation bot-message-shell'; // General class for bot messages
+
+            const iconHTML = `
+                <div class="mr-2 w-8 h-8 rounded-full bg-gray-700 dark:bg-gray-800 flex items-center justify-center text-[#FCB813] text-sm flex-shrink-0">
+                    <i class="fa-solid fa-bug"></i>
+                </div>`;
+            const textContainer = document.createElement('div');
+            textContainer.className = "max-w-[70%] sm:max-w-xs md:max-w-md lg:max-w-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg p-3 shadow";
+            
+            const textParagraph = document.createElement('p');
+            textParagraph.className = 'bot-streaming-message-text'; // Class to identify the streaming text paragraph
+            
+            textContainer.appendChild(textParagraph);
+            messageDiv.innerHTML = iconHTML; 
+            messageDiv.appendChild(textContainer);
+
+            if (chatWindow) chatWindow.appendChild(messageDiv);
+            scrollToBottom();
+            return textParagraph; // Return the paragraph element to update its content
         }
 
-        function _renderBotMessage(message) {
+        // Updates the content of an existing bot message paragraph (for streaming)
+        function _updateBotMessageStreamingContent(paragraphElement, newContentChunk, append = true) {
+            if (paragraphElement) {
+                const newText = escapeHTML(newContentChunk).replace(/\n/g, '<br>');
+                if (append) {
+                    paragraphElement.innerHTML += newText;
+                } else {
+                    paragraphElement.innerHTML = newText;
+                }
+                scrollToBottom();
+            }
+        }
+        
+        // Renders a complete, non-streamed bot message (e.g., for errors or loaded history)
+        function _renderCompleteBotMessage(messageContent) {
             hideWelcomeMessage();
+             // Remove any previous streaming message if it exists before rendering a complete one
+            const existingStreamingMessage = chatWindow.querySelector('.bot-streaming-message-text');
+            if (existingStreamingMessage && existingStreamingMessage.parentElement && existingStreamingMessage.parentElement.parentElement) {
+                 existingStreamingMessage.parentElement.parentElement.remove();
+            }
+
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'flex mb-4 message-animation';
+            messageDiv.className = 'flex mb-4 message-animation bot-message-shell';
             messageDiv.innerHTML = `
-                <div class="mr-2 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-[#FCB813]">
+                <div class="mr-2 w-8 h-8 rounded-full bg-gray-700 dark:bg-gray-800 flex items-center justify-center text-[#FCB813] text-sm flex-shrink-0">
                     <i class="fa-solid fa-bug"></i>
                 </div>
-                <div class="max-w-xs md:max-w-md lg:max-w-lg bg-gray-700 text-gray-200 rounded-lg p-3 shadow">
-                    <p>${message.replace(/\n/g, '<br>')}</p>
+                <div class="max-w-[70%] sm:max-w-xs md:max-w-md lg:max-w-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg p-3 shadow">
+                    <p>${escapeHTML(messageContent).replace(/\n/g, '<br>')}</p>
                 </div>`;
             if (chatWindow) chatWindow.appendChild(messageDiv);
+            scrollToBottom();
         }
+
 
         function addUserMessage(message) {
             currentChatMessages.push({ role: 'user', content: message });
             _renderUserMessage(message);
-            if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight; 
+            // scrollToBottom() is called in _renderUserMessage
             saveChatHistory();
         }
-        
-        function addBotMessage(message) {
-            if (!currentChatMessages.find(m => m.role === 'assistant' && m.content === message)) {
-                 currentChatMessages.push({ role: 'assistant', content: message });
-            }
-            _renderBotMessage(message);
-            if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight; 
-            saveChatHistory();
-        }
-        
+
         function showThinkingIndicator() {
             hideWelcomeMessage();
-            if (document.getElementById('ai-thinking-indicator-shell')) return;
+            // Ensure only one thinking indicator is present
+            const existingIndicator = document.getElementById('ai-thinking-indicator-shell');
+            if (existingIndicator) existingIndicator.remove();
+             // Remove any previous streaming message if it exists
+            const existingStreamingMessage = chatWindow.querySelector('.bot-streaming-message-text');
+            if (existingStreamingMessage && existingStreamingMessage.parentElement && existingStreamingMessage.parentElement.parentElement) {
+                 existingStreamingMessage.parentElement.parentElement.parentElement.remove();
+            }
+
 
             const thinkingIndicatorShell = document.createElement('div');
             thinkingIndicatorShell.className = 'flex mb-4 message-animation';
-            thinkingIndicatorShell.id = 'ai-thinking-indicator-shell'; 
+            thinkingIndicatorShell.id = 'ai-thinking-indicator-shell';
             thinkingIndicatorShell.innerHTML = `
-                <div class="mr-2 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-[#FCB813]">
+                <div class="mr-2 w-8 h-8 rounded-full bg-gray-700 dark:bg-gray-800 flex items-center justify-center text-[#FCB813] flex-shrink-0">
                     <i class="fa-solid fa-bug"></i>
                 </div>
-                <div class="max-w-xs md:max-w-md lg:max-w-lg bg-gray-700 text-gray-200 rounded-lg p-3 shadow">
+                <div class="max-w-xs md:max-w-md lg:max-w-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg p-3 shadow">
                     <div id="ai-thinking-container">
                         <div class="typing-indicator" id="initial-typing-dots">
                             <span></span><span></span><span></span> 
@@ -237,9 +280,9 @@
                     </div>
                 </div>`;
             if (chatWindow) chatWindow.appendChild(thinkingIndicatorShell);
-            if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+            scrollToBottom();
         }
-        
+
         function hideThinkingIndicator() {
             const thinkingIndicatorShell = document.getElementById('ai-thinking-indicator-shell');
             if (thinkingIndicatorShell) {
@@ -247,98 +290,200 @@
             }
         }
 
-        function addAIThought(thoughtText, thoughtId) {
+        function addAIThought(thoughtText, thoughtId) { // Keep this for simulated thoughts
             const thoughtBubblesArea = document.getElementById('thought-bubbles-area');
             if (thoughtBubblesArea) {
                 const thoughtBubble = document.createElement('div');
                 thoughtBubble.className = 'thought-bubble message-animation'; 
-                thoughtBubble.textContent = thoughtText;
-                thoughtBubble.dataset.thoughtId = thoughtId; 
-
-                thoughtBubble.addEventListener('click', function() {
-                    alert(`You clicked on thought: "${thoughtText}" (ID: ${thoughtId})`);
-                    console.log("Thought clicked:", {id: thoughtId, text: thoughtText});
-                });
+                thoughtBubble.textContent = thoughtText; // Already escaped if needed by source
+                // thoughtBubble.dataset.thoughtId = thoughtId; // Not strictly needed if not interactive
                 thoughtBubblesArea.appendChild(thoughtBubble);
-                if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight; 
+                scrollToBottom();
             }
         }
         
         async function sendMessageToBackend(message) {
-            showThinkingIndicator(); 
+            showThinkingIndicator(); // This will now also show the area for simulated thoughts
+
+            // --- Configuration for the Proxy Cloud Function ---
+            // IMPORTANT: Replace this placeholder with your actual Cloud Function's HTTPS Trigger URL
+            const proxyFunctionUrl = 'https://YOUR_CLOUD_FUNCTION_TRIGGER_URL'; // <<< REPLACE THIS
+
+            // 1. Simulate the "thoughts" appearing (as per your original code)
+            // This part remains for displaying simulated thoughts before streaming starts
+            try {
+                await new Promise(resolve => setTimeout(resolve, 200)); 
+                const simulatedThoughts = [
+                    { id: "thought_1", text: "Query received: \"" + message.substring(0, 20) + (message.length > 20 ? "..." : "") + "\"" },
+                    { id: "thought_2", text: "Analyzing context..." },
+                    { id: "thought_3", text: "Preparing to generate response..." }
+                ];
+
+                if (simulatedThoughts && simulatedThoughts.length > 0) {
+                    for (const thought of simulatedThoughts) {
+                        await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200)); 
+                        addAIThought(thought.text, thought.id); 
+                    }
+                }
+                 // Keep the thinking indicator (dots) visible while waiting for the stream
+            } catch (simError) {
+                console.error("Error during simulated thought display:", simError);
+                // Proceed to fetch actual response even if simulated thoughts fail
+            }
+
+            // 2. Now, fetch and stream the actual response from the backend
+            const payload = {
+                user_prompt: message,
+                conversation_history: currentChatMessages
+            };
+
+            let botMessageParagraphElement = null; // To hold the <p> tag for streaming
+            let fullStreamedResponse = "";
 
             try {
-                await new Promise(resolve => setTimeout(resolve, 300)); 
-                const simulatedBackendResponse = {
-                    thoughts: [
-                        { id: "thought_1", text: "Query received: \"" + message.substring(0, 20) + (message.length > 20 ? "..." : "") + "\"" },
-                        { id: "thought_2", text: "Analyzing context..." },
-                        { id: "thought_3", text: "Consulting knowledge base..." },
-                        { id: "thought_4", text: "Constructing response." }
-                    ],
-                    final_response: `Regarding your query about "${message.substring(0,30)}${message.length > 30 ? "..." : ""}", here is my assessment.`
-                };
+                const response = await fetch(proxyFunctionUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                // Hide the initial "typing dots" part of the thinking indicator once stream starts or error
+                const initialTypingDots = document.getElementById('initial-typing-dots');
+                if(initialTypingDots) initialTypingDots.style.display = 'none';
+                // Remove the thought bubbles area as well, as we are now streaming the main response
+                const thoughtBubblesArea = document.getElementById('thought-bubbles-area');
+                if(thoughtBubblesArea) thoughtBubblesArea.innerHTML = '';
 
-                if (simulatedBackendResponse.thoughts && simulatedBackendResponse.thoughts.length > 0) {
-                    for (const thought of simulatedBackendResponse.thoughts) {
-                        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 300)); 
-                        addAIThought(thought.text, thought.id);
+
+                if (!response.ok) {
+                    let errorText = `Error: ${response.status}`;
+                    try {
+                        const errorJson = await response.json();
+                        errorText = errorJson.error || errorJson.message || errorJson.detail || errorText;
+                    } catch (e) {
+                        errorText = await response.text() || errorText; // Fallback to raw text
                     }
-                    await new Promise(resolve => setTimeout(resolve, 400)); 
-                } else {
-                     await new Promise(resolve => setTimeout(resolve, 800)); 
+                    console.error('Backend error:', errorText);
+                    botMessageParagraphElement = _createBotMessageStreamingElement(); // Create a message shell for error
+                    _updateBotMessageStreamingContent(botMessageParagraphElement, errorText, false);
+                    currentChatMessages.push({ role: 'assistant', content: errorText });
+                    saveChatHistory();
+                    hideThinkingIndicator(); // Fully hide if error
+                    return;
                 }
 
-                hideThinkingIndicator(); 
-                addBotMessage(simulatedBackendResponse.final_response); 
+                if (response.body) {
+                    botMessageParagraphElement = _createBotMessageStreamingElement(); // Create the bot message shell
+                    const reader = response.body.pipeThrough(new TextDecoderStream("utf-8")).getReader();
+                    // eslint-disable-next-line no-constant-condition
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        fullStreamedResponse += value;
+                        _updateBotMessageStreamingContent(botMessageParagraphElement, value, true); // Append chunks
+                    }
+                    hideThinkingIndicator(); // Fully hide after successful stream
+                } else {
+                    fullStreamedResponse = "Received an empty stream response.";
+                    botMessageParagraphElement = _createBotMessageStreamingElement();
+                    _updateBotMessageStreamingContent(botMessageParagraphElement, fullStreamedResponse, false);
+                     hideThinkingIndicator();
+                }
+                
+                // After streaming is complete, fullStreamedResponse has the full response including any flags.
+                currentChatMessages.push({ role: 'assistant', content: fullStreamedResponse });
+                saveChatHistory();
 
             } catch (error) {
-                console.error('Error processing AI request:', error);
-                hideThinkingIndicator();
-                addBotMessage("My apologies, I encountered an issue. Please try again.");
+                console.error('Streaming fetch error:', error);
+                hideThinkingIndicator(); // Ensure indicator is hidden on any error
+                if (!botMessageParagraphElement) { // If error happened before message shell was created
+                    botMessageParagraphElement = _createBotMessageStreamingElement();
+                }
+                const errorMessage = "My apologies, a connection error occurred while streaming.";
+                _updateBotMessageStreamingContent(botMessageParagraphElement, errorMessage, false);
+                currentChatMessages.push({ role: 'assistant', content: errorMessage });
+                saveChatHistory();
             }
         }
-        
+
         function saveChatHistory() {
             localStorage.setItem('chatMessagesArray', JSON.stringify(currentChatMessages));
         }
-        
+
         function loadChatHistory() {
             const savedMessages = localStorage.getItem('chatMessagesArray');
             if (chatWindow) chatWindow.innerHTML = ''; 
-            currentChatMessages = []; 
+            currentChatMessages = [];
 
             if (savedMessages) {
-                currentChatMessages = JSON.parse(savedMessages);
-                if (currentChatMessages.length > 0) {
-                    currentChatMessages.forEach(msg => {
-                        if (msg.role === 'user') _renderUserMessage(msg.content);
-                        else if (msg.role === 'assistant') _renderBotMessage(msg.content);
-                    });
-                } else {
-                     if (chatWindow) chatWindow.innerHTML = welcomeMessageHTML; 
+                try {
+                    const parsedMessages = JSON.parse(savedMessages);
+                    if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+                        currentChatMessages = parsedMessages;
+                        currentChatMessages.forEach(msg => {
+                            if (msg.role === 'user') _renderUserMessage(msg.content);
+                            else if (msg.role === 'assistant') _renderCompleteBotMessage(msg.content); // Use complete for history
+                        });
+                        hideWelcomeMessage();
+                    } else {
+                        if (chatWindow) chatWindow.innerHTML = welcomeMessageHTML;
+                    }
+                } catch(e) {
+                    console.error("Error parsing chat history from localStorage", e);
+                    localStorage.removeItem('chatMessagesArray'); 
+                    if (chatWindow) chatWindow.innerHTML = welcomeMessageHTML;
                 }
             } else {
-                if (chatWindow) chatWindow.innerHTML = welcomeMessageHTML; 
+                if (chatWindow) chatWindow.innerHTML = welcomeMessageHTML;
             }
-
-            const wm = document.getElementById('welcome-message');
-            if (currentChatMessages.length > 0 && wm) {
-                wm.style.display = 'none';
-            } else if (wm) {
-                wm.style.display = 'block';
-            }
-            if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight; 
+            scrollToBottom();
         }
         
-        if (userInput) {
-            userInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault(); 
-                    if (chatForm) chatForm.dispatchEvent(new Event('submit')); 
+        function hideWelcomeMessage() {
+            const wm = document.getElementById('welcome-message');
+            if (wm) wm.style.display = 'none';
+        }
+
+        function scrollToBottom() {
+            if (chatWindow) {
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        }
+
+        if (chatForm) {
+            chatForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const message = userInput.value.trim();
+                if (message) {
+                    addUserMessage(message); 
+                    userInput.value = '';
+                    sendMessageToBackend(message);
                 }
             });
         }
+
+        if (clearChatBtn) {
+            clearChatBtn.addEventListener('click', function() {
+                localStorage.removeItem('chatMessagesArray');
+                currentChatMessages = [];
+                if (chatWindow) chatWindow.innerHTML = welcomeMessageHTML;
+                const wm = document.getElementById('welcome-message');
+                if (wm) wm.style.display = 'block';
+            });
+        }
+
+        if (userInput) {
+            userInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (chatForm) chatForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        }
+
+        loadChatHistory();
+
     });
     </script>
 </body>

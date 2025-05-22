@@ -61,15 +61,15 @@ gcloud builds submit --tag gcr.io/$PROJECT_ID/tinylama-llm-backend:v1
 This builds the image and pushes it to Google Container Registry (GCR).
 3. Deploy to Cloud Run as a Private Service
 ```
-export REGION=us-central1 # Or your preferred region
+export REGION=us-east1 # Or your preferred region
 export CLOUD_RUN_SERVICE_NAME=tinylama-llm-backend-private
 
 gcloud run deploy $CLOUD_RUN_SERVICE_NAME \
-    --image=gcr.io/$PROJECT_ID/tinylama-llm-backend:v1 \
+    --image=gcr.io/$PROJECT_ID/tinylama-llm-backend:v2 \
     --platform=managed \
     --region=$REGION \
-    --cpu=1 \
-    --memory=2Gi \
+    --cpu=2 \
+    --memory=4Gi \
     --port=8080 \
     --no-allow-unauthenticated \
     --min-instances=0 \
