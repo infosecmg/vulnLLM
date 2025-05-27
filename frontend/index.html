@@ -8,12 +8,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="theme.css"> {/* Ensuring theme.css is linked */}
     <style>
-        /* Minimal essential styles that were part of the original structure or for basic functionality */
+        
         .message-animation { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .typing-indicator span {
-            height: 8px; width: 8px; margin: 0 1px; background-color: #9ca3af; /* Default, theme.css might override */
+            height: 8px; width: 8px; margin: 0 1px; background-color: #9ca3af; 
             display: inline-block;
             border-radius: 50%; animation: typing 1.4s infinite ease-in-out both;
         }
@@ -21,9 +21,9 @@
         .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
 
         .chat-container { 
-            height: calc(100vh - 220px); /* Default, adjust if header/footer height changes */
+            height: calc(100vh - 220px); 
         }
-        .thought-bubble { /* Added for simulated thoughts */
+        .thought-bubble { 
             background-color: #4b5563; 
             color: #e5e7eb; 
             padding: 0.25rem 0.5rem;
